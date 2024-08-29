@@ -1,5 +1,5 @@
 //
-//  ProductService.swift
+//  Network.swift
 //  iMarket
 //
 //  Created by Kate Song on 8/27/24.
@@ -7,8 +7,8 @@
 
 import Foundation
 
-class ProductService {
-    static let shared = ProductService()
+class Network {
+    static let shared = Network()
     
     private init() {}
     

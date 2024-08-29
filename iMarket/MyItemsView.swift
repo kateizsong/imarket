@@ -10,7 +10,7 @@ import Foundation
 import SwiftUI
 
 struct MyItemsView: View {
-    @EnvironmentObject var cartManager: CartManager
+    @EnvironmentObject var cart: Cart
     @State private var favoritedProducts = [Product]()
 
     var body: some View {
@@ -18,7 +18,7 @@ struct MyItemsView: View {
             ScrollView {
                 LazyVStack(spacing: 16) {
                     ForEach(favoritedProducts) { product in
-                        ProductRow(product: product, cartManager: cartManager)
+                        ProductRow(product: product, cart: cart)
                     }
                 }
                 .padding(.horizontal)
@@ -32,8 +32,8 @@ struct MyItemsView: View {
 
     func fetchFavoritedProducts() async {
         do {
-            let allProducts = try await ProductService.shared.fetchProducts()
-            favoritedProducts = allProducts.filter { product in cartManager.isFavorited(product) }
+            let allProducts = try await Network.shared.fetchProducts()
+            favoritedProducts = allProducts.filter { product in cart.isFavorited(product) }
         } catch {
             print("Error fetching favorited products: \(error)")
         }
@@ -43,6 +43,6 @@ struct MyItemsView: View {
 struct MyItemsView_Previews: PreviewProvider {
     static var previews: some View {
         MyItemsView()
-            .environmentObject(CartManager())
+            .environmentObject(Cart())
     }
 }

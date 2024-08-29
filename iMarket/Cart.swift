@@ -1,5 +1,5 @@
 //
-//  CartManager.swift
+//  Cart.swift
 //  iMarket
 //
 //  Created by Kate Song on 8/27/24.
@@ -8,7 +8,7 @@
 import Foundation
 
 
-class CartManager: ObservableObject {
+class Cart: ObservableObject {
     @Published var items = [CartItem]()
     @Published var favoritedItems: Set<Int> = []
     

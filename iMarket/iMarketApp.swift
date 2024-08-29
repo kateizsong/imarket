@@ -9,7 +9,7 @@ import SwiftUI
 
 @main // main entry point of the app
 struct iMarketApp: App {
-    @StateObject private var cartManager = CartManager()
+    @StateObject private var cart = Cart()
     
     var body: some Scene {
         WindowGroup {
@@ -32,7 +32,7 @@ struct iMarketApp: App {
                         Text("Cart")
                     }
             }
-            .environmentObject(cartManager) 
+            .environmentObject(cart) 
         }
     }
 }

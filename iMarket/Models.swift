@@ -1,5 +1,5 @@
 //
-//  ProductModels.swift
+//  Model.swift
 //  iMarket
 //
 //  Created by Kate Song on 8/27/24.

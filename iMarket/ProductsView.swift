@@ -10,8 +10,8 @@ import SwiftUI
 struct ProductsView: View {
     @State private var products = [Product]()
     @State private var searchText = ""
-    @State private var searchResults = [Product]()
-    @EnvironmentObject var cartManager: CartManager
+    @State private var results = [Product]()
+    @EnvironmentObject var cart: Cart
 
     var body: some View {
         VStack(spacing: 0) {
@@ -30,7 +30,7 @@ struct ProductsView: View {
 
             if !searchText.isEmpty {
                 HStack {
-                    Text("\(searchResults.count) results for")
+                    Text("\(results.count) results for")
                     Text("\"\(searchText)\"")
                         .bold()
                     Spacer()
@@ -41,8 +41,8 @@ struct ProductsView: View {
             
             ScrollView {
                 LazyVStack(spacing: 16) {
-                    ForEach(searchText.isEmpty ? products : searchResults) { product in
-                        ProductRow(product: product, cartManager: cartManager)
+                    ForEach(searchText.isEmpty ? products : results) { product in
+                        ProductRow(product: product, cart: cart)
                     }
                 }
                 .padding(.horizontal)
@@ -56,7 +56,7 @@ struct ProductsView: View {
 
     func fetchData() async {
         do {
-            products = try await ProductService.shared.fetchProducts()
+            products = try await Network.shared.fetchProducts()
         } catch {
             print("Error fetching products: \(error)")
         }
@@ -64,9 +64,9 @@ struct ProductsView: View {
 
     func searchProducts() {
         if searchText.isEmpty {
-            searchResults = products
+            results = products
         } else {
-            searchResults = products.filter { product in
+            results = products.filter { product in
                 product.title.lowercased().contains(searchText.lowercased())
             }
         }
@@ -75,7 +75,7 @@ struct ProductsView: View {
 
 struct ProductRow: View {
     let product: Product
-    @ObservedObject var cartManager: CartManager
+    @ObservedObject var cart: Cart
     @State private var isAddedToCart = false
 
     var body: some View {
@@ -132,7 +132,7 @@ struct ProductRow: View {
                 
                 HStack {
                     Button(action: {
-                        cartManager.addToCart(product)
+                        cart.addToCart(product)
                         isAddedToCart = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             isAddedToCart = false
@@ -148,9 +148,9 @@ struct ProductRow: View {
                             .padding(.top, 5)
                     }
                     Button(action: {
-                        cartManager.toggleFavorite(product)
+                        cart.toggleFavorite(product)
                     }) {
-                        Image(systemName: cartManager.isFavorited(product) ? "heart.fill" : "heart")
+                        Image(systemName: cart.isFavorited(product) ? "heart.fill" : "heart")
                             .foregroundColor(.white)
                             .frame(width: 30, height: 30)
                             .background(Color.gray)
@@ -168,6 +168,6 @@ struct ProductRow: View {
 struct ProductsView_Previews: PreviewProvider {
     static var previews: some View {
         ProductsView()
-            .environmentObject(CartManager())
+            .environmentObject(Cart())
     }
 }

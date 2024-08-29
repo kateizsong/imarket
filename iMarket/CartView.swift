@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 struct CartView: View {
-    @EnvironmentObject var cartManager: CartManager
+    @EnvironmentObject var cart: Cart
     @State private var deliveryMethod = "Pick up"
     @State private var location = "Chapel Hill"
     @State private var isExpanded = false
@@ -39,11 +39,11 @@ struct CartView: View {
                     .padding(9)
                     
                     List {
-                        ForEach(cartManager.items) { item in
+                        ForEach(cart.items) { item in
                             CartItemRow(item: item)
                                 .swipeActions(edge: .trailing) {
                                     Button(role: .destructive) {
-                                        cartManager.removeFromCart(item.product)
+                                        cart.removeFromCart(item.product)
                                     } label: {
                                         Label("Remove", systemImage: "trash")
                                     }
@@ -56,9 +56,9 @@ struct CartView: View {
                     VStack {
                         HStack {
                             VStack(alignment: .leading) {
-                                Text("$\(String(format: "%.2f", cartManager.total)) total")
+                                Text("$\(String(format: "%.2f", cart.total)) total")
                                     .font(.headline)
-                                Text("\(cartManager.items.count) items")
+                                Text("\(cart.items.count) items")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
@@ -77,18 +77,18 @@ struct CartView: View {
                                 HStack {
                                     Text("Subtotal")
                                     Spacer()
-                                    Text("$\(String(format: "%.2f", cartManager.subtotal))")
+                                    Text("$\(String(format: "%.2f", cart.subtotal))")
                                 }
                                 HStack {
                                     Text("Savings")
                                     Spacer()
-                                    Text("-$\(String(format: "%.2f", cartManager.savings))")
+                                    Text("-$\(String(format: "%.2f", cart.savings))")
                                         .foregroundColor(.green)
                                 }
                                 HStack {
                                     Text("Taxes")
                                     Spacer()
-                                    Text("$\(String(format: "%.2f", cartManager.taxes))")
+                                    Text("$\(String(format: "%.2f", cart.taxes))")
                                 }
                             }
                             .padding(.top)
@@ -152,6 +152,6 @@ struct CartItemRow: View {
 struct CartView_Previews: PreviewProvider {
     static var previews: some View {
         CartView()
-            .environmentObject(CartManager())
+            .environmentObject(Cart())
     }
 }
