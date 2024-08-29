@@ -18,6 +18,7 @@ class ProductService {
         }
         
         let (data, response) = try await URLSession.shared.data(from: url)
+      
         
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -25,7 +26,7 @@ class ProductService {
         }
         
         do {
-            let decoder = JSONDecoder()
+            let decoder = JSONDecoder() 
             let productResponse = try decoder.decode(ProductResponse.self, from: data)
             return productResponse.products
         } catch {

@@ -10,48 +10,50 @@ import SwiftUI
 struct ProductsView: View {
     @State private var products = [Product]()
     @State private var searchText = ""
-    
+    @State private var searchResults = [Product]()
+    @EnvironmentObject var cartManager: CartManager
+
     var body: some View {
         VStack(spacing: 0) {
-            // Search bar
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.gray)
                 TextField("What are you looking for?", text: $searchText)
+                    .onChange(of: searchText) { _ in
+                        searchProducts()
+                    }
             }
             .padding()
             .background(Color(.systemGray6))
+            .cornerRadius(20)
+            .padding()
+
+            if !searchText.isEmpty {
+                HStack {
+                    Text("\(searchResults.count) results for")
+                    Text("\"\(searchText)\"")
+                        .bold()
+                    Spacer()
+                }
+                .padding(.horizontal)
+            }
+
             
-            // Product list
             ScrollView {
                 LazyVStack(spacing: 16) {
-                    ForEach(products) { product in
-                        ProductRow(product: product)
+                    ForEach(searchText.isEmpty ? products : searchResults) { product in
+                        ProductRow(product: product, cartManager: cartManager)
                     }
                 }
                 .padding(.horizontal)
             }
-            
-            // Tab bar
-            HStack {
-                Spacer()
-                TabBarItem(imageName: "carrot", text: "Products")
-                Spacer()
-                TabBarItem(imageName: "heart", text: "My Items")
-                Spacer()
-                TabBarItem(imageName: "cart", text: "Cart")
-                Spacer()
-            }
-            .padding(.top, 8)
-            .background(Color.white)
-            .shadow(color: .gray.opacity(0.2), radius: 4, y: -2)
         }
         .edgesIgnoringSafeArea(.bottom)
         .task {
             await fetchData()
         }
     }
-    
+
     func fetchData() async {
         do {
             products = try await ProductService.shared.fetchProducts()
@@ -59,11 +61,23 @@ struct ProductsView: View {
             print("Error fetching products: \(error)")
         }
     }
+
+    func searchProducts() {
+        if searchText.isEmpty {
+            searchResults = products
+        } else {
+            searchResults = products.filter { product in
+                product.title.lowercased().contains(searchText.lowercased())
+            }
+        }
+    }
 }
 
 struct ProductRow: View {
     let product: Product
-    
+    @ObservedObject var cartManager: CartManager
+    @State private var isAddedToCart = false
+
     var body: some View {
         HStack(spacing: 16) {
             AsyncImage(url: URL(string: product.thumbnail ?? "")) { image in
@@ -73,62 +87,87 @@ struct ProductRow: View {
             }
             .frame(width: 130, height: 130)
             .cornerRadius(8)
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(product.title)
                     .font(.subheadline)
                     .lineLimit(1)
-                Text("$\(String(format: "%.2f", product.price))")
+                
+                
+                if let discountPercentage = product.discountPercentage {
+                    HStack {
+                        Text("$\(String(format: "%.2f", product.price))")
+                          .strikethrough()
+                          .foregroundColor(.gray)
+                        Text("$\(String(format: "%.2f", product.price * (1 - discountPercentage / 100)))")
+                         .foregroundColor(.green)
+                    }
                     .font(.headline)
-                Text(product.category ?? "")
-                    .font(.caption)
-                    .padding(.vertical, 3)
-                    .padding(.horizontal, 5)
-                    .foregroundColor(.white)
-                    .background(Color.gray)
-                    .cornerRadius(5)
+                } else {
+                    Text("$\(String(format: "%.2f", product.price))")
+                        .font(.headline)
+                }
+                
+                
+                
+                
+    
                 HStack {
-                    Button(action: {}) {
+                    Text(product.category?.capitalized ?? "")
+                        .font(.caption)
+                        .padding(.vertical, 3)
+                        .padding(.horizontal, 5)
+                        .foregroundColor(.white)
+                        .background(Color.gray)
+                        .cornerRadius(5)
+                    
+                    if product.stock ?? 0 <= 5 {
+                        Text("Almost gone!")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                }
+                
+                
+                
+                HStack {
+                    Button(action: {
+                        cartManager.addToCart(product)
+                        isAddedToCart = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            isAddedToCart = false
+                        }
+                    }) {
                         Text("Add to Cart")
                             .font(.subheadline)
                             .padding(.horizontal, 36)
                             .padding(.vertical, 8)
-                            .background(Color.blue)
+                            .background(isAddedToCart ? Color.blue.opacity(0.7) : Color.blue)
                             .foregroundColor(.white)
                             .cornerRadius(20)
                             .padding(.top, 5)
                     }
-                    Button(action: {}) {
-                        Image(systemName:"heart")
+                    Button(action: {
+                        cartManager.toggleFavorite(product)
+                    }) {
+                        Image(systemName: cartManager.isFavorited(product) ? "heart.fill" : "heart")
                             .foregroundColor(.white)
                             .frame(width: 30, height: 30)
                             .background(Color.gray)
-                            .clipShape(Circle())
+                            .clipShape(Circle()) 
                     }
                 }
             }
-            
+
             Spacer()
         }
         .padding(.vertical, 8)
     }
 }
 
-struct TabBarItem: View {
-    let imageName: String
-    let text: String
-    
-    var body: some View {
-        VStack {
-            Image(systemName: imageName)
-            Text(text)
-                .font(.caption)
-        }
-    }
-}
-
 struct ProductsView_Previews: PreviewProvider {
     static var previews: some View {
         ProductsView()
+            .environmentObject(CartManager())
     }
 }

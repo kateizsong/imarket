@@ -47,7 +47,7 @@ struct ProductResponse: Codable {
     let limit: Int
 }
 
-enum ProductError: Error {
+enum ProductError: Error { 
     case invalidURL
     case invalidResponse
     case invalidData
