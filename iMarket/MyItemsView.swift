@@ -35,7 +35,7 @@ struct MyItemsView: View {
             let allProducts = try await Network.shared.fetchProducts()
             favoritedProducts = allProducts.filter { product in cart.isFavorited(product) }
         } catch {
-            print("Error fetching favorited products: \(error)")
+            print("Error: \(error)")
         }
     }
 }

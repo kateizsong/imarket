@@ -58,7 +58,7 @@ struct ProductsView: View {
         do {
             products = try await Network.shared.fetchProducts()
         } catch {
-            print("Error fetching products: \(error)")
+            print("Error: \(error)")
         }
     }
 
